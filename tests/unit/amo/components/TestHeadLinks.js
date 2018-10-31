@@ -142,4 +142,41 @@ describe(__filename, () => {
       `${baseURL}/${lang}/${clientApp}${to}`,
     );
   });
+
+  it('does not prepend the clientApp when prependClientApp prop is set to `false`', () => {
+    const baseURL = 'https://example.org';
+    const clientApp = CLIENT_APP_ANDROID;
+    const lang = 'de';
+    const to = '/some-url';
+
+    const _hrefLangs = ['fr', 'en-US'];
+    const _config = getFakeConfig({ baseURL });
+    const { store } = dispatchClientMetadata({ clientApp, lang });
+
+    const root = render({
+      _config,
+      _hrefLangs,
+      prependClientApp: false,
+      store,
+      to,
+    });
+
+    expect(root.find('link[rel="canonical"]')).toHaveLength(1);
+    expect(root.find('link[rel="canonical"]')).toHaveProp(
+      'href',
+      `${baseURL}/${lang}${to}`,
+    );
+
+    expect(root.find('link[rel="alternate"]')).toHaveLength(_hrefLangs.length);
+    _hrefLangs.forEach((locale, index) => {
+      expect(root.find('link[rel="alternate"]').at(index)).toHaveProp(
+        'hrefLang',
+        locale,
+      );
+      expect(root.find('link[rel="alternate"]').at(index)).toHaveProp(
+        'href',
+        `${baseURL}/${locale}${to}`,
+      );
+    });
+  });
 });
