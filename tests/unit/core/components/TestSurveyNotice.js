@@ -15,7 +15,7 @@ import Notice from 'ui/components/Notice';
 import {
   createFakeTracking,
   dispatchClientMetadata,
-  fakeCookie,
+  fakeCookies,
   fakeI18n,
   createFakeLocation,
   getFakeConfig,
@@ -24,6 +24,7 @@ import {
 
 describe(__filename, () => {
   const render = ({
+    context = fakeCookies(),
     store = dispatchClientMetadata().store,
     ...customProps
   } = {}) => {
@@ -37,6 +38,7 @@ describe(__filename, () => {
       store,
       ...customProps,
     };
+
     return shallowUntilTarget(<SurveyNotice {...props} />, SurveyNoticeBase);
   };
 
@@ -172,14 +174,15 @@ describe(__filename, () => {
       sinon.assert.calledWith(dispatchSpy, dismissSurvey());
     });
 
-    it('saves a cookie', () => {
-      const _cookie = fakeCookie();
-      const root = render({ _cookie });
+    it.only('saves a cookie', () => {
+      const mockCookies = fakeCookies();
+      jest.mock('./CookiesContext', () => mockCookies);
 
+      const root = render();
       root.instance().dismissNotice();
 
       sinon.assert.calledWith(
-        _cookie.save,
+        mockCookies.set,
         config.get('dismissedExperienceSurveyCookieName'),
         '',
         { maxAge: sinon.match.any, path: '/' },

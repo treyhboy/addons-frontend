@@ -22,7 +22,7 @@ import {
   createContextWithFakeRouter,
   dispatchClientMetadata,
   dispatchSignInActions,
-  fakeCookie,
+  fakeCookies,
   fakeI18n,
   shallowUntilTarget,
   userAuthToken,
@@ -38,7 +38,7 @@ describe(__filename, () => {
     };
   }
 
-  const render = ({ ...props }) => {
+  const render = ({ context = fakeCookies(), ...props }) => {
     const allProps = {
       ...renderProps(),
       ...props,
@@ -46,10 +46,11 @@ describe(__filename, () => {
 
     return shallowUntilTarget(<App {...allProps} />, AppBase, {
       shallowOptions: createContextWithFakeRouter(),
+      context,
     });
   };
 
-  it('sets the mamo cookie to "off"', () => {
+  it.only('sets the mamo cookie to "off"', () => {
     const fakeEvent = {
       preventDefault: sinon.stub(),
     };
@@ -58,15 +59,13 @@ describe(__filename, () => {
         reload: sinon.stub(),
       },
     };
-    const _cookie = fakeCookie();
+    const cookies = fakeCookies();
 
-    const root = render();
-    root.instance().onViewDesktop(fakeEvent, {
-      _window: fakeWindow,
-      _cookie,
-    });
+    const root = render({ context: cookies });
+    root.instance().onViewDesktop(fakeEvent, { _window: fakeWindow });
+
     sinon.assert.called(fakeEvent.preventDefault);
-    sinon.assert.calledWith(_cookie.save, 'mamo', 'off', { path: '/' });
+    sinon.assert.calledWith(cookies.set, 'mamo', 'off', { path: '/' });
     sinon.assert.called(fakeWindow.location.reload);
   });
 
